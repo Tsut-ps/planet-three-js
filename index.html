@@ -1,0 +1,209 @@
+<html>
+<head>
+    <title>Planet three.js app</title>
+        <style>
+            body { margin: 0; }
+            canvas { display: block; }
+        </style>
+</head> 
+<body>
+    <!-- Three.js 読み込み -->
+    <script src="./js/three.js"></script>
+    <script src="./js/OrbitControls.js"></script>
+
+    <!-- HTMLタグによる音源(wav)ファイルの読み込み -->
+	<audio id="audio" src="./assets/second_planet.wav" type="audio/wav" playsinline loop autoplay height="0px"></audio>
+
+	<!-- 音源再生用メディアコントロール -->
+	<div style="width:105px; background-color:#333333; color:#ffffff; position: absolute; top: 0; left: 0;">
+	<input type="button" value="Play" onClick="playAudio()">
+	<input type="button" value="Pause" onClick="pauseAudio()">
+
+	<!-- JS -->
+	<script type="text/javascript">
+		var audio = document.getElementById("audio");
+		function playAudio() {
+			audio.play();		//this function is loaded when the "play" button clicked.
+		}
+		function pauseAudio() {
+			audio.pause();	//this function is loaded when the "pause" button clicked.
+		}
+	</script>
+
+    <script>
+        let scene, camera, renderer, mesh;
+        init();
+        animate();
+        function init() {
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
+            camera.position.set( -500, 300, 1000 );
+
+            // コントロール
+    		const controls = new THREE.OrbitControls( camera );
+
+            // ライト
+            const light_0 = new THREE.PointLight( 0xffffff, 0.5);
+            light_0.position.set( 200, 0, 0 );
+            scene.add( light_0 )
+
+            const light_1 = new THREE.PointLight( 0xffffff, 0.5 );
+            light_1.position.set( -200, 0, 0 );
+            scene.add( light_1 )
+            
+            const light_2 = new THREE.PointLight( 0xffffff, 0.5 );
+            light_2.position.set( 0, 0, 200 );
+            scene.add( light_2 )
+
+            const light_3 = new THREE.PointLight( 0xffffff, 0.5 );
+            light_3.position.set( 0, 0, -200 );
+            scene.add( light_3 )
+
+            const light_s1 = new THREE.SpotLight( 0xffffff, 2, 1000, Math.PI / 4, 0 );
+            light_s1.position.set( 0, 800, 0 );
+            scene.add( light_s1 )
+
+            const light_s2 = new THREE.SpotLight( 0xffffff, 2, 1000, Math.PI / 4, 0 );
+            light_s2.position.set( 0, -800, 0 );
+            scene.add( light_s2 )
+
+            const light_p = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.5 );
+            scene.add( light_p )
+            
+            // テクスチャ読み込み
+            const tex_sun = new THREE.ImageUtils.loadTexture('./assets/Map/sun.jpg')
+			const tex_mer = new THREE.ImageUtils.loadTexture('./assets/Map/mercury.jpg')
+			const tex_ven = new THREE.ImageUtils.loadTexture('./assets/Map/venus.jpg')
+			const tex_ear = new THREE.ImageUtils.loadTexture('./assets/Map/earth.jpg')
+			const tex_mar = new THREE.ImageUtils.loadTexture('./assets/Map/mars.jpg')
+			const tex_jup = new THREE.ImageUtils.loadTexture('./assets/Map/jupiter.jpg')
+			const tex_sat = new THREE.ImageUtils.loadTexture('./assets/Map/saturn.jpg')
+			const tex_ura = new THREE.ImageUtils.loadTexture('./assets/Map/uranus.jpg')
+			const tex_nep = new THREE.ImageUtils.loadTexture('./assets/Map/neptune.jpg')
+            const bump_mer = new THREE.ImageUtils.loadTexture('./assets/BMap/mercury.jpg')
+            const bump_ven = new THREE.ImageUtils.loadTexture('./assets/BMap/venus.jpg')
+            const bump_ear = new THREE.ImageUtils.loadTexture('./assets/BMap/earth.jpg')
+            const bump_mar = new THREE.ImageUtils.loadTexture('./assets/BMap/mars.jpg')
+            
+            const loader = new THREE.CubeTextureLoader();
+            textureCube = loader.load ( ['./assets/BG/star_r.jpg', 
+                './assets/BG/star_l.jpg', 
+                './assets/BG/star_u.jpg', 
+                './assets/BG/star_d.jpg', 
+                './assets/BG/star_f.jpg', 
+                './assets/BG/star_b.jpg' ] );
+            
+            mesh_group = new THREE.Group();
+
+            
+			// 描画
+			for ( let i = 0; i < 512; i++ ) {
+                let d = [];
+                let p = [];
+                let r = [];
+
+                for ( let j = 0; j < 3; j++) { // x,y,zでランダム生成
+                    d[j] = 5 * Math.random(); // 大きさ
+                    p[j] = 10000 * (Math.random()-0.5); // 位置(+-0.5の値を4倍)
+                    r[j] = Math.random() * Math.PI / 2.0; // 回転
+                }
+
+                const geometry = new THREE.BoxBufferGeometry( d[0], d[1], d[2] ); // GPU用に最適化された幾何データ
+
+                s_color = 'rgb(255, 255, 255)';
+                const material = new THREE.MeshStandardMaterial({ color: s_color, roughness: 0.0 })
+
+                const box = new THREE.Mesh( geometry, material );
+                box.rotation.set( r[0], r[1], r[2] );
+                box.position.set( p[0], p[1], p[2] );
+                box.castShadow = true;
+                box.receiveShadow = true;
+
+                scene.add( box );
+            }
+    
+            // ジオメトリ
+            sun = new THREE.Mesh( 
+                new THREE.IcosahedronBufferGeometry( 92.97, 10 ),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, map: tex_sun })
+            );
+            sun.position.set( 0, 0, 0 ); //0
+            mesh_group.add( sun );
+
+            mer = new THREE.Mesh( //大きさ補正済み
+                new THREE.IcosahedronBufferGeometry( 15, 10 ),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, map: tex_mer, bumpMap: bump_mer, bumpScale: 2 })
+            );
+            mer.position.set( -230, 0, 0 ); //230
+            mesh_group.add( mer );
+
+            ven = new THREE.Mesh( 
+                new THREE.IcosahedronBufferGeometry( 45.54, 10 ),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, map: tex_ven, bumpMap: bump_ven, bumpScale: 2 })
+            );
+            ven.position.set( -335, 0, -300 ); //450
+            mesh_group.add( ven );
+
+            ear = new THREE.Mesh( 
+                new THREE.IcosahedronBufferGeometry( 46.05, 10 ),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, map: tex_ear, bumpMap: bump_ear, bumpScale: 2 })
+            );
+            ear.position.set( 332, 0, 500 ); //600
+            mesh_group.add( ear );
+
+            mar = new THREE.Mesh( 
+                new THREE.IcosahedronBufferGeometry( 39.70, 10 ),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, map: tex_mar, bumpMap: bump_mar, bumpScale: 2 })
+            );
+            mar.position.set( 500, 0, -866 ); //1000
+            mesh_group.add( mar );
+
+            jup = new THREE.Mesh( 
+                new THREE.IcosahedronBufferGeometry( 70.21, 10 ),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, map: tex_jup })
+            );
+            jup.position.set( 2828, 0, 1000 ); //1000
+            mesh_group.add( jup );
+
+            sat = new THREE.Mesh( 
+                new THREE.IcosahedronBufferGeometry( 68.51, 10 ),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, map: tex_sat })
+            );
+            sat.position.set( -4000, 0, -3000 ); //5000
+            mesh_group.add( sat );            
+            
+            ura = new THREE.Mesh( 
+                new THREE.IcosahedronBufferGeometry( 59.91, 10 ),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, map: tex_ura })
+            );
+            ura.position.set( 7071, 0, -7071 ); //10000
+            mesh_group.add( ura );            
+            
+            nep = new THREE.Mesh( 
+                new THREE.IcosahedronBufferGeometry( 52.68, 10 ),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, map: tex_nep })
+            );
+            nep.position.set( 14142, 0, 14142 ); //20000
+            mesh_group.add( nep );
+
+            scene.add( mesh_group );
+            scene.background = textureCube;
+
+            // レンダラー
+            renderer = new THREE.WebGLRenderer();
+            renderer.setPixelRatio( window.devicePixelRatio );	
+            renderer.setSize( window.innerWidth, window.innerHeight );
+
+            document.body.appendChild( renderer.domElement );
+        }
+
+        function animate() {
+            requestAnimationFrame( animate );
+            mesh_group.rotation.y += 0.002;
+            renderer.render( scene, camera );
+        }
+    </script>
+
+</body> 
+</html>

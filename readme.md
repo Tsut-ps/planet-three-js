@@ -3,7 +3,7 @@
 https://tsut-ps.github.io/planet-three-js/
 
 Three.jsを使った、惑星がただ回っているだけのシミュレーションです。  
-2022年にThree.jsを使ったマルチメディア講義があり、「自由課題」で提出したものです（一部修正済み）。  
+2022年にマルチメディア講義があり、その応用として作成したものです。  
 一応マウスで動かしたり拡大・縮小したりすることができます。音あり注意。
 
 ![image](https://user-images.githubusercontent.com/73014392/230624507-f0296a8f-87c4-47e0-8de6-50eee96b869c.png)
